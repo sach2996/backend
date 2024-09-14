@@ -1,9 +1,7 @@
 const mongoose = require("mongoose");
-const { boolean } = require("zod");
 require("dotenv").config();
 
 const connectionString = process.env.CONNECTION_STRING;
-console.log("**** ", connectionString);
 
 mongoose.connect(connectionString);
 
