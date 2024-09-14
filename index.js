@@ -14,7 +14,7 @@ app.post("/todo", async (req, res) => {
     });
     return;
   }
-  const result = await todo.create({
+  await todo.create({
     title: parsePayload.data.title,
     description: parsePayload.data.description,
     completed: false,
