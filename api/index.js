@@ -5,6 +5,17 @@ const app = express();
 const cors = require("cors");
 app.use(express.json());
 app.use(cors());
+
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  console.error(err.stack); // Log the error
+  res.status(500).send("Something broke!");
+});
+
+app.get("/", (req, res) => {
+  res.send("Hello from Express on Vercel!");
+});
+
 app.post("/todo", async (req, res) => {
   const reqPayload = req.body;
   const parsePayload = createTodo.safeParse(reqPayload);
