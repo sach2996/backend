@@ -8,7 +8,7 @@
     "start": "node api/index.js",
     "build:dev": "webpack --config webpack.config.js --mode development ",
     "start:dev": "node ./dist/main.js",
-    "build": "npm i && webpack --config webpack.config.js ---mode production",
+    "build": "npm i && webpack --config webpack.config.js --mode production",
     "dev": "webpack-dev-server --mode development --stats-error-details",
     "prod": "node dist/main.js",
     "eslint": "eslint ./",
