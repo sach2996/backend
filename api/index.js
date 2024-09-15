@@ -17,59 +17,76 @@ app.use((err, req, res, next) => {
 app.get("/", (req, res) => {
   res.send("Hello from Express on Vercel!");
 });
-
 app.post("/todo", async (req, res) => {
-  const reqPayload = req.body;
-  const parsePayload = createTodo.safeParse(reqPayload);
-  if (!parsePayload.success) {
-    res.status(411).json({
-      error: "Please pass valid input",
+  try {
+    const reqPayload = req.body;
+    const parsePayload = createTodo.safeParse(reqPayload);
+    if (!parsePayload.success) {
+      res.status(411).json({
+        error: "Please pass valid input",
+      });
+      return;
+    }
+    await todo.create({
+      title: parsePayload.data.title,
+      description: parsePayload.data.description,
+      completed: false,
     });
-    return;
+    res.status(201).json({
+      message: "Todo Created Successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to create Todo" });
   }
-  await todo.create({
-    title: parsePayload.data.title,
-    description: parsePayload.data.description,
-    completed: false,
-  });
-  res.status(201).json({
-    message: "Todo Created Successfully",
-  });
 });
 
 app.get("/todos", async (req, res) => {
-  const result = await todo.find({});
-  res.status(200).json(result);
+  try {
+    const result = await todo.find({});
+    res.status(200).json(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to fetch todos" });
+  }
 });
 
 app.put("/completed", async (req, res) => {
-  const reqPayload = req.body;
-  const parsePayload = updateTodo.safeParse(reqPayload);
-  if (!parsePayload.success) {
-    res.status(411).json({
-      error: "Please pass valid id",
-    });
-    return;
-  }
-
-  await todo.updateOne(
-    { _id: parsePayload.data.id },
-    {
-      completed: true,
+  try {
+    const reqPayload = req.body;
+    const parsePayload = updateTodo.safeParse(reqPayload);
+    if (!parsePayload.success) {
+      res.status(411).json({
+        error: "Please pass valid id",
+      });
+      return;
     }
-  );
 
-  res.status(200).json({
-    message: "Todo completed",
-  });
+    await todo.updateOne(
+      { _id: parsePayload.data.id },
+      {
+        completed: true,
+      }
+    );
+
+    res.status(200).json({
+      message: "Todo completed",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to update todo" });
+  }
 });
 
 app.delete("/todo/:id", async (req, res) => {
-  const id = req.params.id;
-
-  const result = await todo.findOneAndDelete({ _id: id });
-
-  res.status(200).json(result);
+  try {
+    const id = req.params.id;
+    const result = await todo.findOneAndDelete({ _id: id });
+    res.status(200).json(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to delete todo" });
+  }
 });
 
 // Remove the app.listen(3000) line; not needed in serverless environment
