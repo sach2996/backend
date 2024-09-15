@@ -90,9 +90,9 @@ app.delete("/todo/:id", async (req, res) => {
 });
 
 // Remove the app.listen(3000) line; not needed in serverless environment
-// app.listen(3000, () => {
-//   console.log("Server is running on port: 3000");
-// });
+app.listen(3000, () => {
+  console.log("Server is running on port: 3000");
+});
 
 // Export the app for Vercel to handle as a serverless function
 module.exports = (req, res) => {
