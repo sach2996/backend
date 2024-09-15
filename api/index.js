@@ -3,9 +3,11 @@ const { createTodo, updateTodo } = require("../types");
 const { todo } = require("./db");
 const app = express();
 const cors = require("cors");
+
 app.use(express.json());
 app.use(cors());
 
+// Error handling middleware
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   console.error(err.stack); // Log the error
@@ -70,11 +72,12 @@ app.delete("/todo/:id", async (req, res) => {
   res.status(200).json(result);
 });
 
-app.listen(3000, () => {
-  console.log("Server is running on port: 3000");
-});
+// Remove the app.listen(3000) line; not needed in serverless environment
+// app.listen(3000, () => {
+//   console.log("Server is running on port: 3000");
+// });
 
-// Export a function for Vercel to handle
+// Export the app for Vercel to handle as a serverless function
 module.exports = (req, res) => {
-  return app(req, res); // Use the app as a request handler
+  return app(req, res);
 };
