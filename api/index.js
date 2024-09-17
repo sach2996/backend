@@ -1,6 +1,9 @@
 const express = require("express");
 const { createTodo, updateTodo } = require("../types");
 const { todo } = require("./db");
+
+const splitwiseRoutes = require("./splitwise");
+const { router, authMiddleware } = require("./auth.js");
 const app = express();
 const cors = require("cors");
 
@@ -17,6 +20,10 @@ app.use((err, req, res, next) => {
 app.get("/", (req, res) => {
   res.send("Hello from Express on Vercel!");
 });
+
+app.use("/api/auth", router);
+
+app.use("/api/split", authMiddleware, splitwiseRoutes);
 app.post("/todo", async (req, res) => {
   try {
     const reqPayload = req.body;

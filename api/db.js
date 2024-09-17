@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { string } = require("zod");
 require("dotenv").config();
 
 // eslint-disable-next-line no-undef
@@ -14,6 +15,53 @@ const todoSchema = mongoose.Schema({
 
 const todo = mongoose.model("todos", todoSchema);
 
+// Define Transaction Schema
+const transactionSchema = new mongoose.Schema({
+  username: String,
+  email: String,
+  description: String,
+  currency: String,
+  amount: Number,
+  date: Date,
+});
+
+// Define Shares Schema
+const shareSchema = new mongoose.Schema({
+  transaction_id: { type: mongoose.Schema.Types.ObjectId, ref: "Transaction" },
+  user_id: Number,
+  owed: Number,
+  paid: Number,
+  input: mongoose.Schema.Types.Mixed, // 'input' can be any type, hence 'Mixed'
+  calculated_amount: Number,
+});
+
+// Create Models
+const transaction = mongoose.model("Transaction", transactionSchema);
+const share = mongoose.model("Share", shareSchema);
+
+const userSchema = new mongoose.Schema({
+  email: {
+    type: String,
+    required: true,
+  },
+  username: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  password: {
+    type: String,
+    required: true,
+  },
+});
+
+const User = mongoose.model("User", userSchema);
+
+module.exports = User;
+
 module.exports = {
   todo,
+  transaction,
+  share,
+  User,
 };
