@@ -12,14 +12,25 @@ splitRouter.get("/transaction", (req, res) => {
 
 // POST endpoint to handle the payload
 splitRouter.post("/transaction", async (req, res) => {
-  const { username, email, description, currency, amount, date, shares } =
-    req.body;
+  const {
+    username,
+    email,
+    firstname,
+    lastname,
+    description,
+    currency,
+    amount,
+    date,
+    shares,
+  } = req.body;
 
   try {
     // Step 1: Create and save the transaction
     const newTransaction = new transaction({
       username: username,
       email: email,
+      firstname,
+      lastname,
       description,
       currency,
       amount,
@@ -31,11 +42,15 @@ splitRouter.post("/transaction", async (req, res) => {
     // Step 2: Create and save the shares linked to this transaction
     const shareDocuments = shares.map((share) => ({
       transaction_id: transactionResponse._id,
-      user_id: share.user_id,
-      owed: share.owed,
+      username: share.username,
+      email: share.email,
+      firstname: share.firstname,
+      lastname: share.lastname,
+      group_id: share.group_id,
+      debit: share.debit,
+      credit: share.credit,
       paid: share.paid,
       input: share.input,
-      calculated_amount: share.calculated_amount,
     }));
     await share.insertMany(shareDocuments);
 
@@ -57,8 +72,6 @@ splitRouter.get("/transaction/:username", async (req, res) => {
   try {
     let transactions = [];
     const transactionResponse = await transaction.find({ username: username });
-
-    console.log("result  ", transactionResponse);
     if (!transactionResponse) {
       return res.status(404).json({ error: "Transaction not found" });
     }
@@ -69,8 +82,19 @@ splitRouter.get("/transaction/:username", async (req, res) => {
       transactions.push({ transaction: transaction, shares: result });
     }
 
+    const credit = calculateCredit(transactions, username);
+    const debit = calculateDebit(transactions, username);
+    const paid = calculatePaid(transactions, username);
+
     res.status(200).json({
-      data: transactions,
+      username: username,
+      email: transactionResponse[0].email,
+      firstname: transactionResponse[0].firstname,
+      lastname: transactionResponse[0].lastname,
+      credit: credit,
+      debit: debit,
+      paid: paid,
+      transactions: transactions,
     });
   } catch (error) {
     console.error(error);
@@ -78,4 +102,50 @@ splitRouter.get("/transaction/:username", async (req, res) => {
   }
 });
 
+function calculateCredit(transactions, username) {
+  // let totalPaid = 0;
+  let totalOwe = 0;
+
+  for (const transaction of transactions) {
+    const shares = transaction.shares;
+    for (const share of shares) {
+      if (share.username === username) {
+        // totalPaid += share.paid;
+        totalOwe += share.credit;
+      }
+    }
+  }
+
+  return totalOwe;
+}
+
+function calculateDebit(transactions, username) {
+  let totalGetBack = 0;
+
+  for (const transaction of transactions) {
+    const shares = transaction.shares;
+    for (const share of shares) {
+      if (share.username === username) {
+        totalGetBack += share.debit;
+      }
+    }
+  }
+
+  return totalGetBack;
+}
+
+function calculatePaid(transactions, username) {
+  let totalPaid = 0;
+
+  for (const transaction of transactions) {
+    const shares = transaction.shares;
+    for (const share of shares) {
+      if (share.username === username) {
+        totalPaid += share.paid;
+      }
+    }
+  }
+
+  return totalPaid;
+}
 module.exports = splitRouter;
