@@ -22,13 +22,16 @@ const transactionSchema = new mongoose.Schema({
   description: String,
   currency: String,
   amount: Number,
+  group_id: String,
   date: Date,
 });
 
 // Define Shares Schema
 const shareSchema = new mongoose.Schema({
   transaction_id: { type: mongoose.Schema.Types.ObjectId, ref: "Transaction" },
-  user_id: Number,
+  username: String,
+  email: String,
+  group_id: String,
   owed: Number,
   paid: Number,
   input: mongoose.Schema.Types.Mixed, // 'input' can be any type, hence 'Mixed'

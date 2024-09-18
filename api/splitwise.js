@@ -31,7 +31,9 @@ splitRouter.post("/transaction", async (req, res) => {
     // Step 2: Create and save the shares linked to this transaction
     const shareDocuments = shares.map((share) => ({
       transaction_id: transactionResponse._id,
-      user_id: share.user_id,
+      username: share.username,
+      email: share.email,
+      group_id: share.group_id,
       owed: share.owed,
       paid: share.paid,
       input: share.input,
@@ -57,8 +59,6 @@ splitRouter.get("/transaction/:username", async (req, res) => {
   try {
     let transactions = [];
     const transactionResponse = await transaction.find({ username: username });
-
-    console.log("result  ", transactionResponse);
     if (!transactionResponse) {
       return res.status(404).json({ error: "Transaction not found" });
     }
@@ -69,8 +69,17 @@ splitRouter.get("/transaction/:username", async (req, res) => {
       transactions.push({ transaction: transaction, shares: result });
     }
 
+    const balance = calculateBalance(transactions, username);
+    const owed = calculateOwed(transactions, username);
+    const paid = calculatePaid(transactions, username);
+
     res.status(200).json({
-      data: transactions,
+      username: username,
+      email: transactionResponse[0].email,
+      balance: balance,
+      owed: owed,
+      paid: paid,
+      transactions: transactions,
     });
   } catch (error) {
     console.error(error);
@@ -78,4 +87,50 @@ splitRouter.get("/transaction/:username", async (req, res) => {
   }
 });
 
+function calculateBalance(transactions, username) {
+  let totalPaid = 0;
+  let totalOwed = 0;
+
+  for (const transaction of transactions) {
+    const shares = transaction.shares;
+    for (const share of shares) {
+      if (share.username === username) {
+        totalPaid += share.paid;
+        totalOwed += share.owed;
+      }
+    }
+  }
+
+  return totalPaid - totalOwed;
+}
+
+function calculateOwed(transactions, username) {
+  let totalOwed = 0;
+
+  for (const transaction of transactions) {
+    const shares = transaction.shares;
+    for (const share of shares) {
+      if (share.username === username) {
+        totalOwed += share.owed;
+      }
+    }
+  }
+
+  return totalOwed;
+}
+
+function calculatePaid(transactions, username) {
+  let totalPaid = 0;
+
+  for (const transaction of transactions) {
+    const shares = transaction.shares;
+    for (const share of shares) {
+      if (share.username === username) {
+        totalPaid += share.paid;
+      }
+    }
+  }
+
+  return totalPaid;
+}
 module.exports = splitRouter;
