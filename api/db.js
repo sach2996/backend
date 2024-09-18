@@ -7,18 +7,20 @@ const connectionString = process.env.CONNECTION_STRING;
 
 mongoose.connect(connectionString);
 
-const todoSchema = mongoose.Schema({
-  title: String,
-  description: String,
-  completed: Boolean,
-});
+// const todoSchema = mongoose.Schema({
+//   title: String,
+//   description: String,
+//   completed: Boolean,
+// });
 
-const todo = mongoose.model("todos", todoSchema);
+// const todo = mongoose.model("todos", todoSchema);
 
 // Define Transaction Schema
 const transactionSchema = new mongoose.Schema({
   username: String,
   email: String,
+  firstname: String,
+  lastname: String,
   description: String,
   currency: String,
   amount: Number,
@@ -31,11 +33,13 @@ const shareSchema = new mongoose.Schema({
   transaction_id: { type: mongoose.Schema.Types.ObjectId, ref: "Transaction" },
   username: String,
   email: String,
+  firstname: String,
+  lastname: String,
   group_id: String,
-  owed: Number,
+  debit: Number,
+  credit: Number,
   paid: Number,
   input: mongoose.Schema.Types.Mixed, // 'input' can be any type, hence 'Mixed'
-  calculated_amount: Number,
 });
 
 // Create Models
@@ -46,6 +50,7 @@ const userSchema = new mongoose.Schema({
   email: {
     type: String,
     required: true,
+    unique: true,
   },
   username: {
     type: String,
@@ -56,6 +61,14 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  firstname: {
+    type: String,
+    required: true,
+  },
+  lastname: {
+    type: String,
+    required: true,
+  },
 });
 
 const User = mongoose.model("User", userSchema);
@@ -63,7 +76,6 @@ const User = mongoose.model("User", userSchema);
 module.exports = User;
 
 module.exports = {
-  todo,
   transaction,
   share,
   User,

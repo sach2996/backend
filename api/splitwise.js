@@ -12,14 +12,25 @@ splitRouter.get("/transaction", (req, res) => {
 
 // POST endpoint to handle the payload
 splitRouter.post("/transaction", async (req, res) => {
-  const { username, email, description, currency, amount, date, shares } =
-    req.body;
+  const {
+    username,
+    email,
+    firstname,
+    lastname,
+    description,
+    currency,
+    amount,
+    date,
+    shares,
+  } = req.body;
 
   try {
     // Step 1: Create and save the transaction
     const newTransaction = new transaction({
       username: username,
       email: email,
+      firstname,
+      lastname,
       description,
       currency,
       amount,
@@ -33,11 +44,13 @@ splitRouter.post("/transaction", async (req, res) => {
       transaction_id: transactionResponse._id,
       username: share.username,
       email: share.email,
+      firstname: share.firstname,
+      lastname: share.lastname,
       group_id: share.group_id,
-      owed: share.owed,
+      debit: share.debit,
+      credit: share.credit,
       paid: share.paid,
       input: share.input,
-      calculated_amount: share.calculated_amount,
     }));
     await share.insertMany(shareDocuments);
 
@@ -69,15 +82,17 @@ splitRouter.get("/transaction/:username", async (req, res) => {
       transactions.push({ transaction: transaction, shares: result });
     }
 
-    const balance = calculateBalance(transactions, username);
-    const owed = calculateOwed(transactions, username);
+    const credit = calculateCredit(transactions, username);
+    const debit = calculateDebit(transactions, username);
     const paid = calculatePaid(transactions, username);
 
     res.status(200).json({
       username: username,
       email: transactionResponse[0].email,
-      balance: balance,
-      owed: owed,
+      firstname: transactionResponse[0].firstname,
+      lastname: transactionResponse[0].lastname,
+      credit: credit,
+      debit: debit,
       paid: paid,
       transactions: transactions,
     });
@@ -87,36 +102,36 @@ splitRouter.get("/transaction/:username", async (req, res) => {
   }
 });
 
-function calculateBalance(transactions, username) {
-  let totalPaid = 0;
-  let totalOwed = 0;
+function calculateCredit(transactions, username) {
+  // let totalPaid = 0;
+  let totalOwe = 0;
 
   for (const transaction of transactions) {
     const shares = transaction.shares;
     for (const share of shares) {
       if (share.username === username) {
-        totalPaid += share.paid;
-        totalOwed += share.owed;
+        // totalPaid += share.paid;
+        totalOwe += share.credit;
       }
     }
   }
 
-  return totalPaid - totalOwed;
+  return totalOwe;
 }
 
-function calculateOwed(transactions, username) {
-  let totalOwed = 0;
+function calculateDebit(transactions, username) {
+  let totalGetBack = 0;
 
   for (const transaction of transactions) {
     const shares = transaction.shares;
     for (const share of shares) {
       if (share.username === username) {
-        totalOwed += share.owed;
+        totalGetBack += share.debit;
       }
     }
   }
 
-  return totalOwed;
+  return totalGetBack;
 }
 
 function calculatePaid(transactions, username) {

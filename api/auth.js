@@ -16,6 +16,8 @@ router.post(
   "/register",
   [
     body("email", "Email id is required").not().isEmpty(),
+    body("firstname", "First name is required").not().isEmpty(),
+    body("lastname", "Last name is required").not().isEmpty(),
     body("username", "Username is required").not().isEmpty(),
     body("password", "Password must be at least 6 characters").isLength({
       min: 6,
@@ -27,13 +29,17 @@ router.post(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { email, username, password } = req.body;
+    const { email, username, password, firstname, lastname } = req.body;
 
     try {
       // Check if the user already exists
       let user = await User.findOne({ username });
       if (user) {
         return res.status(400).json({ error: "User already exists" });
+      }
+      let emailResponse = await User.findOne({ email });
+      if (emailResponse) {
+        return res.status(400).json({ error: "Email already exists" });
       }
 
       // Hash the password
@@ -46,6 +52,8 @@ router.post(
         email,
         username,
         password: hashedPassword,
+        firstname,
+        lastname,
       });
 
       await user.save();
@@ -55,6 +63,8 @@ router.post(
         user: {
           username: user.username,
           email: user.email,
+          firstname: user.firstname,
+          lastname: user.lastname,
         },
       };
 
@@ -102,6 +112,8 @@ router.post(
         user: {
           username: user.username,
           email: user.email,
+          firstname: user.firstname,
+          lastname: user.lastname,
         },
       };
 
@@ -134,6 +146,8 @@ const authMiddleware = (req, res, next) => {
 
     req.body.username = decoded.user.username;
     req.body.email = decoded.user.email;
+    req.body.firstname = decoded.user.firstname;
+    req.body.lastname = decoded.user.lastname;
     next();
   } catch (err) {
     res.status(401).json({ msg: "Token is not valid", error: err });
