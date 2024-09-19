@@ -70,7 +70,13 @@ router.post(
 
       jwt.sign(payload, JWT_SECRET, { expiresIn: "1h" }, (err, token) => {
         if (err) throw err;
-        res.status(201).json({ token });
+        res.status(201).json({
+          token,
+          username: user.username,
+          email: user.email,
+          firstname: user.firstname,
+          lastname: user.lastname,
+        });
       });
     } catch (err) {
       console.error(err.message);
@@ -119,8 +125,13 @@ router.post(
 
       jwt.sign(payload, JWT_SECRET, { expiresIn: "1h" }, (err, token) => {
         if (err) throw err;
-        console.log(payload);
-        res.status(200).json({ token });
+        res.status(200).json({
+          token,
+          username: user.username,
+          email: user.email,
+          firstname: user.firstname,
+          lastname: user.lastname,
+        });
       });
     } catch (err) {
       console.error(err.message);

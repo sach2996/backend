@@ -93,6 +93,7 @@ splitRouter.get("/transaction/:username", async (req, res) => {
       lastname: transactionResponse[0].lastname,
       credit: credit,
       debit: debit,
+      balance: debit - credit,
       paid: paid,
       transactions: transactions,
     });
@@ -109,7 +110,7 @@ function calculateCredit(transactions, username) {
   for (const transaction of transactions) {
     const shares = transaction.shares;
     for (const share of shares) {
-      if (share.username === username) {
+      if (share.username === username && share.paid === 0) {
         // totalPaid += share.paid;
         totalOwe += share.credit;
       }
