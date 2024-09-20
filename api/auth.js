@@ -142,7 +142,6 @@ router.post(
 
 // Middleware to authenticate JWT tokens
 const authMiddleware = (req, res, next) => {
-  console.log("request reached auth middleware ", req.body, req.header);
   // Get token from header
   const token = req.header("Authorization").split(" ")[1];
 

@@ -21,6 +21,7 @@ splitRouter.post("/transaction", async (req, res) => {
     currency,
     amount,
     date,
+    groupName,
     shares,
   } = req.body;
 
@@ -35,6 +36,7 @@ splitRouter.post("/transaction", async (req, res) => {
       currency,
       amount,
       date,
+      groupName,
     });
 
     const transactionResponse = await newTransaction.save();
@@ -46,7 +48,7 @@ splitRouter.post("/transaction", async (req, res) => {
       email: share.email,
       firstname: share.firstname,
       lastname: share.lastname,
-      group_id: share.group_id,
+      groupName: share.groupName,
       debit: share.debit,
       credit: share.credit,
       paid: share.paid,
