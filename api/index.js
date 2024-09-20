@@ -6,6 +6,8 @@ const splitwiseRoutes = require("./splitwise");
 const { router, authMiddleware } = require("./auth.js");
 const app = express();
 const cors = require("cors");
+const friendsRouter = require("./friends.js");
+const groupsRouter = require("./groups.js");
 
 app.use(express.json());
 app.use(cors());
@@ -24,6 +26,9 @@ app.get("/", (req, res) => {
 app.use("/api/auth", router);
 
 app.use("/api/split", authMiddleware, splitwiseRoutes);
+
+app.use("/api/friend", authMiddleware, friendsRouter);
+app.use("/api/group", authMiddleware, groupsRouter);
 app.post("/todo", async (req, res) => {
   try {
     const reqPayload = req.body;
