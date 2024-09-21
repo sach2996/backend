@@ -82,7 +82,7 @@ friendsRouter.get("/", async (req, res) => {
       });
     }
 
-    return res.status(200).json({ username: username, friendsResponse });
+    return res.status(200).json({ username: username, friends });
   } catch (error) {
     console.error("Error checking existing friends:", error);
     return res.status(500).json({ message: "Internal server error" });
