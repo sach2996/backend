@@ -36,8 +36,8 @@ friendsRouter.post("/", async (req, res) => {
     // Check if the friendship already exists
     const existingFriend = await Friend.findOne({
       $or: [
-        { user: user._id, friend: friendUser._id },
-        { user: friendUser._id, friend: user._id },
+        { user: user.username, friend: friendUser.username },
+        { user: friendUser.username, friend: user.username },
       ],
     });
     if (existingFriend) {
@@ -46,8 +46,8 @@ friendsRouter.post("/", async (req, res) => {
 
     // Create new friendship
     const newFriend = new Friend({
-      user: user._id,
-      friend: friendUser._id,
+      user: user.username,
+      friend: friendUser.username,
     });
     await newFriend.save();
     return res.status(201).json({ message: "Friend added successfully" });
@@ -73,7 +73,7 @@ friendsRouter.get("/", async (req, res) => {
     }
 
     const friendsResponse = await Friend.find({
-      $or: [{ user: user._id }, { friend: user._id }],
+      $or: [{ user: user.username }, { friend: user.username }],
     }).lean();
 
     if (friendsResponse.length === 0) {
@@ -81,18 +81,33 @@ friendsRouter.get("/", async (req, res) => {
     }
 
     // Create an array of friend IDs to fetch their details
-    const friendIds = friendsResponse.map((friend) =>
-      friend.user.equals(user._id) ? friend.friend : friend.user
+    const friendIds = friendsResponse.map(
+      (friend) => {
+        if (friend.user === username) {
+          return friend.friend;
+        }
+        return friend.user;
+      }
+
+      // friend.user.equals(user.username) ? friend.friend : friend.user
     );
 
-    const friendsDetails = await User.find({ _id: { $in: friendIds } }).lean();
+    const friendsDetails = await User.find({
+      username: { $in: friendIds },
+    }).lean();
 
-    const friends = friendsDetails.map((friend) => ({
-      username: friend.username,
-      email: friend.email,
-      firstname: friend.firstname,
-      lastname: friend.lastname,
-    }));
+    let friends = friendsDetails.map((friend) => {
+      for (const item of friendsResponse) {
+        if (item.user === friend.username || item.friend === friend.username)
+          return {
+            username: friend.username,
+            email: friend.email,
+            firstname: friend.firstname,
+            lastname: friend.lastname,
+            transactions: item.transactions,
+          };
+      }
+    });
 
     return res.status(200).json({ username: username, friends });
   } catch (error) {
