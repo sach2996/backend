@@ -32,13 +32,15 @@ router.post(
     const { email, username, password, firstname, lastname } = req.body;
 
     try {
-      // Check if the user already exists
+      // Check if username already exists
       let user = await User.findOne({ username });
       if (user) {
-        return res.status(400).json({ error: "User already exists" });
+        return res.status(400).json({ error: "Username already exists" });
       }
-      let emailResponse = await User.findOne({ email });
-      if (emailResponse) {
+
+      // Check if email already exists
+      user = await User.findOne({ email });
+      if (user) {
         return res.status(400).json({ error: "Email already exists" });
       }
 
@@ -46,8 +48,7 @@ router.post(
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(password, salt);
 
-      // Save the user to the database
-
+      // Create a new user instance
       user = new User({
         email,
         username,
@@ -56,11 +57,13 @@ router.post(
         lastname,
       });
 
+      // Save the user to the database
       await user.save();
 
-      // Create and send a JWT token
+      // Create JWT payload
       const payload = {
         user: {
+          id: user._id, // Include user ID for further use
           username: user.username,
           email: user.email,
           firstname: user.firstname,
@@ -68,18 +71,21 @@ router.post(
         },
       };
 
+      // Sign the JWT token
       jwt.sign(payload, JWT_SECRET, { expiresIn: "1h" }, (err, token) => {
         if (err) throw err;
         res.status(201).json({
           token,
-          username: user.username,
-          email: user.email,
-          firstname: user.firstname,
-          lastname: user.lastname,
+          user: {
+            username: user.username,
+            email: user.email,
+            firstname: user.firstname,
+            lastname: user.lastname,
+          },
         });
       });
     } catch (err) {
-      console.error(err.message);
+      console.error("Error during user registration:", err.message);
       res.status(500).send("Server error");
     }
   }
@@ -127,10 +133,12 @@ router.post(
         if (err) throw err;
         res.status(200).json({
           token,
-          username: user.username,
-          email: user.email,
-          firstname: user.firstname,
-          lastname: user.lastname,
+          user: {
+            username: user.username,
+            email: user.email,
+            firstname: user.firstname,
+            lastname: user.lastname,
+          },
         });
       });
     } catch (err) {

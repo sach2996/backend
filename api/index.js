@@ -8,6 +8,7 @@ const app = express();
 const cors = require("cors");
 const friendsRouter = require("./friends.js");
 const groupsRouter = require("./groups.js");
+const balanceRouter = require("./balance.js");
 
 app.use(express.json());
 app.use(cors());
@@ -29,6 +30,7 @@ app.use("/api/split", authMiddleware, splitwiseRoutes);
 
 app.use("/api/friend", authMiddleware, friendsRouter);
 app.use("/api/group", authMiddleware, groupsRouter);
+app.use("/api/balance", authMiddleware, balanceRouter);
 app.post("/todo", async (req, res) => {
   try {
     const reqPayload = req.body;

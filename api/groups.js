@@ -26,6 +26,7 @@ groupsRouter.post("/", async (req, res) => {
       updatedAt: new Date(),
       isPublic: isPublic,
     });
+    console.log(group);
     const groupResponse = await group.save();
     res.status(201).json({
       message: "Group created successfully",

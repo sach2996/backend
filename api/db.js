@@ -1,112 +1,124 @@
 const mongoose = require("mongoose");
 require("dotenv").config();
 
+// Connect to MongoDB
 // eslint-disable-next-line no-undef
 const connectionString = process.env.CONNECTION_STRING;
-
-mongoose.connect(connectionString);
-
-// const todoSchema = mongoose.Schema({
-//   title: String,
-//   description: String,
-//   completed: Boolean,
-// });
-
-// const todo = mongoose.model("todos", todoSchema);
-
-// Define Transaction Schema
-const transactionSchema = new mongoose.Schema({
-  username: String,
-  email: String,
-  firstname: String,
-  lastname: String,
-  description: String,
-  currency: String,
-  amount: Number,
-  groupName: String,
-  date: Date,
+mongoose.connect(connectionString, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
 });
 
-// Define Shares Schema
-const shareSchema = new mongoose.Schema({
-  transaction_id: { type: mongoose.Schema.Types.ObjectId, ref: "Transaction" },
-  username: String,
-  email: String,
-  firstname: String,
-  lastname: String,
-  groupName: String,
-  debit: Number,
-  credit: Number,
-  paid: Number,
-  input: mongoose.Schema.Types.Mixed, // 'input' can be any type, hence 'Mixed'
-});
-
-const friendSchema = new mongoose.Schema({
-  // username: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  // friend: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  user: { type: String, required: true },
-  friend: { type: String, required: true },
-});
-
-const groupSchema = new mongoose.Schema({
-  groupName: { type: String, required: true, unique: true },
-  description: String,
-  users: [{ type: String, required: true, ref: "User" }],
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now },
-  isPublic: { type: Boolean, default: true },
-  joinRequests: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-  settings: {
-    // Group-specific settings
-    visibility: {
+// Define User Schema
+const userSchema = new mongoose.Schema(
+  {
+    email: {
       type: String,
-      enum: ["public", "private"],
-      default: "private",
+      required: true,
+      unique: true,
     },
-    notifications: { type: Boolean, default: true },
+    username: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    password: {
+      type: String,
+      required: true,
+    },
+    firstname: {
+      type: String,
+      required: true,
+    },
+    lastname: {
+      type: String,
+      required: true,
+    },
   },
-  transactions: [{ type: mongoose.Schema.Types.ObjectId, ref: "Transaction" }],
-});
-
-// Create Models
-const transaction = mongoose.model("Transaction", transactionSchema);
-const share = mongoose.model("Share", shareSchema);
-const Friend = mongoose.model("Friend", friendSchema);
-const Group = mongoose.model("Group", groupSchema);
-
-const userSchema = new mongoose.Schema({
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  username: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  password: {
-    type: String,
-    required: true,
-  },
-  firstname: {
-    type: String,
-    required: true,
-  },
-  lastname: {
-    type: String,
-    required: true,
-  },
-});
+  { timestamps: true }
+); // Automatically adds createdAt and updatedAt
 
 const User = mongoose.model("User", userSchema);
 
-module.exports = User;
+// Define Transaction Schema
+const transactionSchema = new mongoose.Schema(
+  {
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, // Link to user who created the transaction
+    description: String,
+    currency: String,
+    amount: Number,
+    groupName: { type: String, ref: "Group" }, // Link to the group
+    date: Date,
+  },
+  { timestamps: true }
+);
 
+const Transaction = mongoose.model("Transaction", transactionSchema);
+
+// Define Shares Schema
+const shareSchema = new mongoose.Schema(
+  {
+    transaction_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Transaction",
+      required: true,
+    },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, // Link to user who shares the expense
+    debit: Number,
+    credit: Number,
+    paid: Number,
+    input: mongoose.Schema.Types.Mixed, // For any additional data
+  },
+  { timestamps: true }
+);
+
+const Share = mongoose.model("Share", shareSchema);
+
+// Define Friend Schema
+const friendSchema = new mongoose.Schema(
+  {
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, // User who has the friend
+    friend: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    }, // Friend user reference
+  },
+  { timestamps: true }
+);
+
+const Friend = mongoose.model("Friend", friendSchema);
+
+// Define Group Schema
+const groupSchema = new mongoose.Schema(
+  {
+    groupName: { type: String, required: true, unique: true },
+    description: String,
+    users: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }], // Array of users in the group
+    isPublic: { type: Boolean, default: true },
+    joinRequests: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    settings: {
+      visibility: {
+        type: String,
+        enum: ["public", "private"],
+        default: "private",
+      },
+      notifications: { type: Boolean, default: true },
+    },
+    transactions: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "Transaction" },
+    ],
+  },
+  { timestamps: true }
+);
+
+const Group = mongoose.model("Group", groupSchema);
+
+// Export Models
 module.exports = {
-  transaction,
-  share,
   User,
+  Transaction,
+  Share,
   Friend,
   Group,
 };
