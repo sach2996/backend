@@ -1,10 +1,9 @@
 // routes/groupRoutes.js
 const express = require("express");
-const { addFriend, getFriends } = require("../controller/friends.controller");
+const { getBalance } = require("../controller/balance.controller");
 
-const friendsRouter = express.Router();
+const balanceRouter = express.Router();
 
-friendsRouter.post("/", addFriend);
-friendsRouter.get("/", getFriends);
+balanceRouter.get("/", getBalance);
 
-module.exports = friendsRouter;
+module.exports = balanceRouter;
