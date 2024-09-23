@@ -9,7 +9,8 @@ const usersRoutes = require("./routes/users.js");
 const friendsRoutes = require("./routes/friends.js");
 const groupsRoutes = require("./routes/groups.js");
 const transactionsRoutes = require("./routes/transactions.js");
-// const balanceRouter = require("./balance.js");
+
+const balanceRoutes = require("./routes/balance.js");
 
 // eslint-disable-next-line no-undef
 const connectionString = process.env.CONNECTION_STRING;
@@ -38,7 +39,7 @@ app.use("/api/transaction", authMiddleware, transactionsRoutes);
 
 app.use("/api/friend", authMiddleware, friendsRoutes);
 app.use("/api/group", authMiddleware, groupsRoutes);
-// app.use("/api/balance", authMiddleware, balanceRouter);
+app.use("/api/balance", authMiddleware, balanceRoutes);
 
 // Remove the app.listen(3000) line; not needed in serverless environment
 app.listen(3000, () => {
