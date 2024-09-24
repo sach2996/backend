@@ -8,58 +8,16 @@ const getBalance = async (username) => {
       throw new Error("User not found");
     }
 
-    const shares = await Share.find({ username }).populate("transaction_id");
-
     const friends = await calculateIndividualBalance(username);
-    // Step 3: Map to hold balances against each user and group
-    const balancesMap = {}; // Map for accumulating balances by user
-    const groupBalancesMap = {}; // Map for accumulating balances by group
 
-    // Step 4: Loop through all shares to calculate balances
-    for (const share of shares) {
-      const { transaction_id, ownShare, paid } = share;
-      const { username: otherUser, groupName } = transaction_id;
+    const balances = await calculateGroupBalance(username);
 
-      // Calculate balance for this transaction
-      const balance = paid - ownShare;
-
-      // Update user balance
-      if (!balancesMap[otherUser]) {
-        balancesMap[otherUser] = {
-          username: otherUser,
-          balanceTotal: 0,
-          groups: {},
-        };
-      }
-      balancesMap[otherUser].balanceTotal += balance;
-
-      // Update group balance
-      if (!balancesMap[otherUser].groups[groupName]) {
-        balancesMap[otherUser].groups[groupName] = 0;
-      }
-      balancesMap[otherUser].groups[groupName] += balance;
-
-      // Update overall group balance map
-      if (!groupBalancesMap[groupName]) {
-        groupBalancesMap[groupName] = 0;
-      }
-      groupBalancesMap[groupName] += balance;
-    }
-
-    // Step 5: Transform the map into an array response
-    const balances = Object.values(balancesMap).map((entry) => ({
-      username: entry.username,
-      balanceTotal: entry.balanceTotal,
-      groups: Object.keys(entry.groups).map((group) => ({
-        groupName: group,
-        balance: entry.groups[group],
-      })),
+    return {
+      username: balances.username,
+      balanceTotal: balances.balanceTotal,
+      groups: balances.groups,
       friends,
-    }));
-
-    // Step 6: Construct the final response
-
-    return balances; // Returning the first and only match (current user)
+    }; // Returning the first and only match (current user)
   } catch (error) {
     console.error("Error fetching balance response:", error);
     throw new Error("Failed to get balance response");
@@ -131,4 +89,58 @@ async function calculateIndividualBalance(username) {
   return response; // Return the balance with each friend
 }
 
-module.exports = { getBalance, calculateIndividualBalance };
+async function calculateGroupBalance(username) {
+  const shares = await Share.find({ username }).populate("transaction_id");
+
+  // Step 3: Map to hold balances against each user and group
+  const balancesMap = {}; // Map for accumulating balances by user
+  const groupBalancesMap = {}; // Map for accumulating balances by group
+
+  // Step 4: Loop through all shares to calculate balances
+  for (const share of shares) {
+    const { transaction_id, ownShare, paid } = share;
+    const { username: otherUser, groupName } = transaction_id;
+
+    // Calculate balance for this transaction
+    const balance = paid - ownShare;
+
+    // Update user balance
+    if (!balancesMap[otherUser]) {
+      balancesMap[otherUser] = {
+        username: otherUser,
+        balanceTotal: 0,
+        groups: {},
+      };
+    }
+    balancesMap[otherUser].balanceTotal += balance;
+
+    // Update group balance
+    if (!balancesMap[otherUser].groups[groupName]) {
+      balancesMap[otherUser].groups[groupName] = 0;
+    }
+    balancesMap[otherUser].groups[groupName] += balance;
+
+    // Update overall group balance map
+    if (!groupBalancesMap[groupName]) {
+      groupBalancesMap[groupName] = 0;
+    }
+    groupBalancesMap[groupName] += balance;
+  }
+
+  // Step 5: Transform the map into an array response
+  const balances = Object.values(balancesMap).map((entry) => ({
+    username: entry.username,
+    balanceTotal: entry.balanceTotal,
+    groups: Object.keys(entry.groups).map((group) => ({
+      groupName: group,
+      balance: entry.groups[group],
+    })),
+  }));
+  return balances[0];
+}
+
+module.exports = {
+  getBalance,
+  calculateIndividualBalance,
+  calculateGroupBalance,
+};
