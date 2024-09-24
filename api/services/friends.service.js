@@ -1,6 +1,6 @@
 const Friend = require("../models/friends");
 const User = require("../models/users");
-
+const balanceService = require("../services/balance.service");
 const addFriend = async (friendId, username) => {
   if (friendId === username) {
     throw new Error("You cannot add yourself as a friend");
@@ -75,6 +75,16 @@ const getFriends = async (username) => {
     }
   });
 
+  const friendsBalance = await balanceService.calculateIndividualBalance(
+    username
+  );
+  for (const friend of friends) {
+    for (const item of friendsBalance) {
+      if (item.username === friend.username) {
+        friend.balance = item.balance;
+      }
+    }
+  }
   return { username: username, friends };
 };
 module.exports = { addFriend, getFriends };
