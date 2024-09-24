@@ -131,4 +131,4 @@ async function calculateIndividualBalance(username) {
   return response; // Return the balance with each friend
 }
 
-module.exports = { getBalance };
+module.exports = { getBalance, calculateIndividualBalance };
