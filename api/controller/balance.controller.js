@@ -14,7 +14,7 @@ const getBalance = async (req, res) => {
 
     res.status(200).json({
       message: "Balance retrived successfully",
-      balance,
+      balance: balance,
     });
   } catch (error) {
     console.error("Error retrieving balance:", error.message);
