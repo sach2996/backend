@@ -1,5 +1,6 @@
 const Friend = require("../models/friends");
 const User = require("../models/users");
+const Group = require("../models/groups");
 const balanceService = require("../services/balance.service");
 const addFriend = async (friendId, username) => {
   if (friendId === username) {
@@ -62,18 +63,29 @@ const getFriends = async (username) => {
     username: { $in: friendIds },
   }).lean();
 
-  let friends = friendsDetails.map((friend) => {
+  let friends = [];
+  for (const friend of friendsDetails) {
     for (const item of friendsResponse) {
-      if (item.user === friend.username || item.friend === friend.username)
+      const groupsResponse = await Group.find({
+        users: { $all: [item.user, item.friend] },
+      });
+      const modifiedResponse = groupsResponse.map((group) => {
         return {
+          groupName: group.groupName,
+          balance: 0, // Default to 0 if no balance is found
+        };
+      });
+      if (item.user === friend.username || item.friend === friend.username)
+        friends.push({
           username: friend.username,
           email: friend.email,
           firstname: friend.firstname,
           lastname: friend.lastname,
           transactions: item.transactions,
-        };
+          groups: modifiedResponse,
+        });
     }
-  });
+  }
 
   const friendsBalance = await balanceService.calculateIndividualBalance(
     username
@@ -85,6 +97,7 @@ const getFriends = async (username) => {
       }
     }
   }
+
   return { username: username, friends };
 };
 module.exports = { addFriend, getFriends };
