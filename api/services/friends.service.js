@@ -1,6 +1,8 @@
 const Friend = require("../models/friends");
 const User = require("../models/users");
 const Group = require("../models/groups");
+const { Share } = require("../models/transactions");
+
 const balanceService = require("../services/balance.service");
 const addFriend = async (friendId, username) => {
   if (friendId === username) {
@@ -69,12 +71,13 @@ const getFriends = async (username) => {
       const groupsResponse = await Group.find({
         users: { $all: [item.user, item.friend] },
       });
-      const modifiedResponse = groupsResponse.map((group) => {
-        return {
-          groupName: group.groupName,
-          balance: 0, // Default to 0 if no balance is found
-        };
-      });
+      const modifiedResponse = await calculateGroupWiseBalance(groupsResponse);
+      // const modifiedResponse = groupsResponse.map((group) => {
+      //   return {
+      //     groupName: group.groupName,
+      //     balance: 0, // Default to 0 if no balance is found
+      //   };
+      // });
       if (item.user === friend.username || item.friend === friend.username)
         friends.push({
           username: friend.username,
@@ -100,4 +103,68 @@ const getFriends = async (username) => {
 
   return { username: username, friends };
 };
+
+async function calculateGroupWiseBalance(groups) {
+  // const modifiedResponse = groupsResponse.map((group) => {
+  //   return {
+  //     groupName: group.groupName,
+  //     balance: 0, // Default to 0 if no balance is found
+  //   };
+  // });
+
+  const balancesMap = {}; // To track overall balances by friend
+  const individualBalancesMap = {}; // To track individual transaction balances by friend
+
+  // Step 4: Loop through each friend and calculate balances
+  for (const group of groups) {
+    const groupName = group.groupName;
+
+    // Initialize balance for this friend if not already present
+    if (!balancesMap[groupName]) {
+      balancesMap[groupName] = 0;
+    }
+
+    // Step 5: Loop through each transaction and calculate balance
+    for (const transaction of group.transactions) {
+      const shares = await Share.find({
+        transaction_id: transaction,
+        groupName: groupName,
+      });
+
+      // Step 6: Calculate balance from each share in this transaction
+      for (const share of shares) {
+        const { username: shareUser, ownShare, paid } = share;
+        if (paid > 0) {
+          // Calculate balance for this transaction (amount paid minus own share)
+          const balance = paid - ownShare;
+
+          if (balance >= 0) {
+            if (!individualBalancesMap[groupName]) {
+              individualBalancesMap[groupName] = 0;
+            }
+
+            if (shareUser === groupName) {
+              individualBalancesMap[groupName] += balance;
+            } else {
+              individualBalancesMap[groupName] -= balance;
+            }
+            // Update overall balance for this friend
+            if (shareUser === groupName) {
+              balancesMap[groupName] = balance;
+            } else {
+              balancesMap[groupName] = balance;
+            }
+          }
+        }
+      }
+    }
+  }
+  const response = Object.keys(balancesMap).map((groupName) => ({
+    groupName: groupName,
+    balance: -balancesMap[groupName], //fix this hard coded value later
+  }));
+
+  return response; // Return the balance with each friend
+}
+
 module.exports = { addFriend, getFriends };
