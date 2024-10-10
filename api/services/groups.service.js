@@ -18,14 +18,12 @@ const addGroup = async (groupName, description, users, isPublic) => {
 
   const userResponse = await User.find({ username: { $in: users } });
 
-  // const userExistsResults = await Promise.all(userExistsPromises);
   const invalidUsers = userResponse.filter(
     (user) => !users.includes(user.username)
   );
 
   const usersToAdd = userResponse.map((user) => user.username);
 
-  // console.log(userResponse, invalidUsers);
   if (invalidUsers.length > 0) {
     throw new Error(`Invalid user IDs: ${invalidUsers.join(", ")}`);
   }
