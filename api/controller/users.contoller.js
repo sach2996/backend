@@ -50,4 +50,15 @@ const loginUser = async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 };
-module.exports = { registerUser, loginUser };
+
+const healthCheck = async (req, res) => {
+  try {
+    res.status(200).json({
+      message: "Application is working.",
+    });
+  } catch (error) {
+    console.error("Error during healthcheck:", error.message);
+    res.status(400).json({ message: error.message });
+  }
+};
+module.exports = { registerUser, loginUser, healthCheck };
